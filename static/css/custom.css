@@ -1,0 +1,241 @@
+/* Custom styles for Nutrition Tracker */
+
+/* General improvements */
+.hero-section {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 202, 240, 0.1) 100%);
+    border-radius: 1rem;
+}
+
+.feature-icon {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .feature-icon {
+    transform: translateY(-5px);
+}
+
+/* Nutrition info styling */
+.nutrition-info {
+    font-size: 0.9rem;
+}
+
+.nutrition-item {
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.nutrition-item .value {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--bs-body-color);
+}
+
+.nutrition-item .label {
+    font-size: 0.8em;
+    color: var(--bs-secondary);
+    text-transform: uppercase;
+}
+
+/* Progress bars */
+.progress {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* User avatar */
+.user-avatar {
+    margin-bottom: 1rem;
+}
+
+/* Food search results */
+.food-results {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    background: var(--bs-body-bg);
+}
+
+.food-result-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.food-result-item:hover {
+    background-color: var(--bs-secondary-bg);
+}
+
+.food-result-item:last-child {
+    border-bottom: none;
+}
+
+.food-result-name {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.food-result-nutrition {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+}
+
+/* Statistics cards */
+.stat-item h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Admin dashboard improvements */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-info {
+    border: none;
+}
+
+.opacity-75 {
+    opacity: 0.75;
+}
+
+/* Table improvements */
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--bs-body-color);
+}
+
+/* Search box styling */
+.search-box {
+    width: 250px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2rem 1rem !important;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+    
+    .search-box {
+        width: 100%;
+        margin-top: 1rem;
+    }
+    
+    .nutrition-item {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Form improvements */
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Button improvements */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+}
+
+/* Card improvements */
+.card {
+    border-radius: 1rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Footer improvements */
+footer {
+    margin-top: auto;
+}
+
+/* Utility classes */
+.text-decoration-none:hover {
+    text-decoration: underline !important;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Animation classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Chart container */
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* Nutrition summary improvements */
+.nutrition-summary .progress {
+    height: 6px;
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Modal improvements */
+.modal-content {
+    border-radius: 1rem;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--bs-border-color);
+}
+
+/* Alert improvements */
+.alert {
+    border-radius: 0.75rem;
+    border: none;
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 500;
+}
+
+/* Input group improvements */
+.input-group .form-control {
+    border-left: none;
+}
+
+.input-group .input-group-text {
+    background-color: var(--bs-secondary-bg);
+    border-right: none;
+}
