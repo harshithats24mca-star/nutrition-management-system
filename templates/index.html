@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - NutriTrack{% endblock %}
+
+{% block content %}
+<div class="hero-section text-center py-5 mb-5">
+    <div class="container">
+        <h1 class="display-4 mb-4">
+            <i class="fas fa-utensils text-primary me-3"></i>
+            Welcome to NutriTrack
+        </h1>
+        <p class="lead mb-4">
+            Follow expert-designed meal plans, manage your nutrition, and achieve your health goals with our comprehensive nutrition management system.
+        </p>
+        
+        {% if not session.user_id %}
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Available Meal Plans -->
+{% if available_plans %}
+<div class="row mb-5">
+    <div class="col-12">
+        <h3 class="text-center mb-4">
+            <i class="fas fa-utensils me-2"></i>Featured Meal Plans
+        </h3>
+    </div>
+    {% for plan in available_plans[:3] %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ plan.name }}</h5>
+                <small class="text-muted">{{ plan.category }}</small>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ plan.description }}</p>
+                <p class="mb-2">
+                    <strong><i class="fas fa-fire me-1"></i>{{ plan.daily_calories }} calories/day</strong>
+                </p>
+                <p class="text-muted mb-3">
+                    <i class="fas fa-utensils me-1"></i>{{ plan.foods|length }} meals included
+                </p>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('view_meal_plan', plan_id=plan.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-info-circle me-2"></i>View Details
+                    </a>
+                    {% if session.user_id %}
+                    <form method="POST" action="{{ url_for('assign_meal_plan') }}">
+                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                        <input type="hidden" name="date" value="{{ today }}">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-play me-2"></i>Start This Plan
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="text-center mb-5">
+    <a href="{{ url_for('search') }}" class="btn btn-outline-primary btn-lg">
+        <i class="fas fa-th-large me-2"></i>View All Meal Plans
+    </a>
+</div>
+{% endif %}
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5">
+            <i class="fas fa-star me-2"></i>Features
+        </h2>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-database fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Expert Meal Plans</h5>
+                <p class="card-text">
+                    Choose from professionally designed meal plans tailored for different health and fitness goals.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-calendar-alt fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Nutrition Management</h5>
+                <p class="card-text">
+                    Follow structured meal plans and manage your daily nutrition with guided recommendations.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-chart-bar fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Nutrition Analytics</h5>
+                <p class="card-text">
+                    Visualize your nutrition trends and progress with detailed charts and daily summaries.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.user_id %}
+<!-- Quick Actions for Logged-in Users -->
+<div class="row">
+    <div class="col-12">
+        <h3 class="text-center mb-4">
+            <i class="fas fa-bolt me-2"></i>Quick Actions
+        </h3>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <a href="{{ url_for('nutrition_management') }}" class="btn btn-outline-primary btn-lg w-100">
+            <i class="fas fa-calendar-alt me-2"></i>Manage Nutrition
+        </a>
+    </div>
+    
+    <div class="col-md-6 mb-3">
+        <a href="{{ url_for('profile') }}" class="btn btn-outline-success btn-lg w-100">
+            <i class="fas fa-chart-line me-2"></i>View Progress
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/nutrition.js') }}"></script>
+{% endblock %}

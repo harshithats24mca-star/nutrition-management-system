@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition Management - NutriTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-calendar-alt me-2"></i>Nutrition Management
+        </h2>
+        <p class="text-muted">Follow expert meal plans and manage your daily nutrition.</p>
+    </div>
+</div>
+
+<!-- Date Selection -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="GET" class="d-flex gap-2">
+            <input type="date" class="form-control" name="date" value="{{ selected_date }}">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search me-1"></i>View Date
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Current Meal Plan -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-utensils me-2"></i>Your Plan for {{ selected_date }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user_plan_data %}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="text-success">{{ user_plan_data.plan.name }}</h4>
+                            <p class="text-muted">{{ user_plan_data.plan.description }}</p>
+                            <p class="mb-2">
+                                <span class="badge bg-primary">{{ user_plan_data.plan.category }}</span>
+                                <span class="badge bg-info ms-2">
+                                    <i class="fas fa-fire me-1"></i>{{ user_plan_data.plan.daily_calories }} calories
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ url_for('view_meal_plan', plan_id=user_plan_data.plan.id) }}" 
+                               class="btn btn-outline-info mb-2">
+                                <i class="fas fa-info-circle me-1"></i>View Details
+                            </a>
+                            <a href="{{ url_for('remove_meal_plan', date_str=selected_date) }}" 
+                               class="btn btn-outline-danger mb-2"
+                               onclick="return confirm('Are you sure you want to remove this meal plan for today?')">
+                                <i class="fas fa-times me-1"></i>Remove Plan
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Meal Breakdown -->
+                    <hr>
+                    <h6><i class="fas fa-list me-2"></i>Today's Meals</h6>
+                    {% set meals_by_type = {} %}
+                    {% for food_item in user_plan_data.plan.foods %}
+                        {% set meal_type = food_item.meal_type %}
+                        {% if meal_type not in meals_by_type %}
+                            {% set _ = meals_by_type.update({meal_type: []}) %}
+                        {% endif %}
+                        {% set _ = meals_by_type[meal_type].append(food_item) %}
+                    {% endfor %}
+
+                    <div class="row">
+                        {% for meal_type in ['Breakfast', 'Lunch', 'Dinner', 'Snack'] %}
+                            {% if meals_by_type.get(meal_type) %}
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">
+                                            <i class="fas fa-{% if meal_type == 'Breakfast' %}sun{% elif meal_type == 'Lunch' %}cloud-sun{% elif meal_type == 'Dinner' %}moon{% else %}cookie-bite{% endif %} me-1"></i>
+                                            {{ meal_type }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        {% for food_item in meals_by_type[meal_type] %}
+                                        <div class="mb-2">
+                                            <strong>{{ food_item.food_name }}</strong><br>
+                                            <small class="text-muted">{{ food_item.quantity }} serving{{ 's' if food_item.quantity != 1 }}</small>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5>No meal plan assigned for this date</h5>
+                        <p class="text-muted">Choose from our available meal plans below to get started.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Meal Plans -->
+{% if available_plans %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h4><i class="fas fa-th-large me-2"></i>Available Meal Plans</h4>
+        <p class="text-muted">Choose a meal plan to follow for the selected date.</p>
+    </div>
+    {% for plan in available_plans %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h6 class="card-title mb-0">{{ plan.name }}</h6>
+                <small class="text-muted">{{ plan.category }}</small>
+            </div>
+            <div class="card-body">
+                <p class="card-text text-sm">{{ plan.description }}</p>
+                <p class="mb-2">
+                    <strong><i class="fas fa-fire me-1"></i>{{ plan.daily_calories }} calories/day</strong>
+                </p>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-utensils me-1"></i>{{ plan.foods|length }} meals included
+                </p>
+            </div>
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('view_meal_plan', plan_id=plan.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-info-circle me-1"></i>Details
+                    </a>
+                    {% if not user_plan_data or user_plan_data.plan.id != plan.id %}
+                    <form method="POST" action="{{ url_for('assign_meal_plan') }}">
+                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                        <input type="hidden" name="date" value="{{ selected_date }}">
+                        <button type="submit" class="btn btn-sm btn-success w-100">
+                            <i class="fas fa-play me-1"></i>Start Plan
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="btn btn-sm btn-secondary w-100" disabled>
+                        <i class="fas fa-check me-1"></i>Currently Following
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center">
+    <a href="{{ url_for('search') }}" class="btn btn-outline-primary">
+        <i class="fas fa-search me-2"></i>Browse All Meal Plans
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-submit date form on change
+document.querySelector('input[name="date"]').addEventListener('change', function() {
+    this.form.submit();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - NutriTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <!-- User Info Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user me-2"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle fa-5x text-secondary"></i>
+                    </div>
+                </div>
+                
+                <div class="user-details">
+                    <p class="mb-2">
+                        <strong><i class="fas fa-user me-2"></i>Username:</strong> 
+                        {{ user.username }}
+                    </p>
+                    <p class="mb-2">
+                        <strong><i class="fas fa-envelope me-2"></i>Email:</strong> 
+                        {{ user.email }}
+                    </p>
+                    <p class="mb-0">
+                        <strong><i class="fas fa-calendar me-2"></i>Member since:</strong> 
+                        {{ user.created_at[:10] }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Current Plan Summary -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-utensils me-2"></i>Today's Plan
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if current_plan %}
+                    <div class="current-plan-info">
+                        <h6 class="text-success mb-2">{{ current_plan.name }}</h6>
+                        <p class="text-muted small mb-3">{{ current_plan.description[:100] }}{% if current_plan.description|length > 100 %}...{% endif %}</p>
+                        
+                        <div class="plan-stats mb-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-fire text-danger me-1"></i>Target Calories</span>
+                                <strong>{{ current_plan.daily_calories }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-utensils text-primary me-1"></i>Meals</span>
+                                <strong>{{ current_plan.foods|length }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-tag text-info me-1"></i>Category</span>
+                                <span class="badge bg-primary">{{ current_plan.category }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('view_meal_plan', plan_id=current_plan.id) }}" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-info-circle me-1"></i>View Plan Details
+                            </a>
+                            <a href="{{ url_for('nutrition_management') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-calendar-alt me-1"></i>Manage Nutrition
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-calendar-times fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-3">No meal plan for today</p>
+                        <a href="{{ url_for('search') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-search me-1"></i>Find a Plan
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Today's Nutrition -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Today's Nutrition Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if current_plan %}
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="nutrition-summary">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-fire text-danger me-1"></i>Calories</span>
+                                    <strong>{{ "%.0f"|format(daily_nutrition.calories) }} / {{ current_plan.daily_calories }}</strong>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-danger" style="width: {{ (daily_nutrition.calories / current_plan.daily_calories * 100) | round }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-drumstick-bite text-primary me-1"></i>Protein</span>
+                                    <strong>{{ "%.1f"|format(daily_nutrition.protein) }}g</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ (daily_nutrition.protein / 150 * 100) | round }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-bread-slice text-warning me-1"></i>Carbs</span>
+                                    <strong>{{ "%.1f"|format(daily_nutrition.carbs) }}g</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" style="width: {{ (daily_nutrition.carbs / 300 * 100) | round }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-tint text-info me-1"></i>Fat</span>
+                                    <strong>{{ "%.1f"|format(daily_nutrition.fat) }}g</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" style="width: {{ (daily_nutrition.fat / 67 * 100) | round }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-0">
+                                <div class="d-flex justify-content-between">
+                                    <span><i class="fas fa-seedling text-success me-1"></i>Fiber</span>
+                                    <strong>{{ "%.1f"|format(daily_nutrition.fiber) }}g</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: {{ (daily_nutrition.fiber / 25 * 100) | round }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <canvas id="nutritionChart" width="250" height="250"></canvas>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No nutrition data for today</h5>
+                    <p class="text-muted">Choose a meal plan to start tracking your nutrition.</p>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Browse Meal Plans
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- My Meal Plan History -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>My Meal Plan History
+                </h5>
+                <a href="{{ url_for('nutrition_management') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-calendar-alt me-1"></i>Manage Plans
+                </a>
+            </div>
+            <div class="card-body">
+                {% if assignments %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Meal Plan</th>
+                                <th>Category</th>
+                                <th>Calories</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for assignment_data in assignments[:10] %}
+                            {% set assignment = assignment_data.assignment %}
+                            {% set plan = assignment_data.plan %}
+                            <tr>
+                                <td>{{ assignment.start_date }}</td>
+                                <td>
+                                    <strong>{{ plan.name }}</strong><br>
+                                    <small class="text-muted">{{ plan.description[:50] }}{% if plan.description|length > 50 %}...{% endif %}</small>
+                                </td>
+                                <td><span class="badge bg-primary">{{ plan.category }}</span></td>
+                                <td>{{ plan.daily_calories }}</td>
+                                <td>
+                                    {% if assignment.start_date == today %}
+                                        <span class="badge bg-success">Active Today</span>
+                                    {% elif assignment.start_date > today %}
+                                        <span class="badge bg-info">Scheduled</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Completed</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('view_meal_plan', plan_id=plan.id) }}" 
+                                           class="btn btn-outline-info" title="View Plan">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if assignment.start_date >= today %}
+                                        <a href="{{ url_for('remove_meal_plan', date_str=assignment.start_date) }}" 
+                                           class="btn btn-outline-danger" title="Remove"
+                                           onclick="return confirm('Are you sure you want to remove this meal plan assignment?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if assignments|length > 10 %}
+                <div class="text-center mt-3">
+                    <small class="text-muted">Showing latest 10 meal plan assignments</small>
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No meal plans followed yet</h6>
+                    <p class="text-muted">Start your nutrition management journey by choosing your first meal plan!</p>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Browse Meal Plans
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if current_plan %}
+<script>
+// Nutrition Chart
+const ctx = document.getElementById('nutritionChart').getContext('2d');
+const nutritionChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Protein', 'Carbs', 'Fat'],
+        datasets: [{
+            data: [
+                {{ daily_nutrition.protein * 4 }},  // Protein calories (4 cal/g)
+                {{ daily_nutrition.carbs * 4 }},    // Carb calories (4 cal/g)
+                {{ daily_nutrition.fat * 9 }}       // Fat calories (9 cal/g)
+            ],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',     // Success green
+                'rgba(255, 193, 7, 0.8)',     // Warning yellow
+                'rgba(220, 53, 69, 0.8)'      // Danger red
+            ],
+            borderColor: [
+                'rgba(40, 167, 69, 1)',
+                'rgba(255, 193, 7, 1)',
+                'rgba(220, 53, 69, 1)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#ffffff',
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        if (total === 0) return `${label}: 0 cal (0%)`;
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value.toFixed(0)} cal (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

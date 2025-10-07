@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Meal Plans - Admin - NutriTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-list-ul me-2"></i>Manage Meal Plans
+        </h2>
+        <p class="text-muted">Create and manage meal plans for your users.</p>
+    </div>
+</div>
+
+<!-- Add New Meal Plan -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>Create New Meal Plan
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.add_meal_plan') }}" id="addMealPlanForm">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Meal Plan Name *</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label">Category *</label>
+                            <select class="form-control" name="category" required>
+                                <option value="">Choose category...</option>
+                                <option value="Weight Loss">Weight Loss</option>
+                                <option value="Muscle Building">Muscle Building</option>
+                                <option value="General Health">General Health</option>
+                                <option value="Athletic Performance">Athletic Performance</option>
+                                <option value="Vegetarian">Vegetarian</option>
+                                <option value="Keto">Keto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="daily_calories" class="form-label">Daily Calories *</label>
+                            <input type="number" class="form-control" name="daily_calories" min="1200" max="4000" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description *</label>
+                        <textarea class="form-control" name="description" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Foods in Plan *</label>
+                        <div id="foodItems">
+                            <div class="row food-item mb-2">
+                                <div class="col-md-4">
+                                    <select class="form-control food-select" name="food_ids" required onchange="updateFoodName(this)">
+                                        <option value="">Choose food...</option>
+                                        {% for food in foods %}
+                                        <option value="{{ food.id }}" data-name="{{ food.name }}">{{ food.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" class="food-name" name="food_names">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" class="form-control" name="quantities" placeholder="Quantity" step="0.1" min="0.1" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control" name="meal_types" required>
+                                        <option value="Breakfast">Breakfast</option>
+                                        <option value="Lunch">Lunch</option>
+                                        <option value="Dinner">Dinner</option>
+                                        <option value="Snack">Snack</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeFoodItem(this)">
+                                        <i class="fas fa-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addFoodItem()">
+                            <i class="fas fa-plus me-1"></i>Add Food Item
+                        </button>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Create Meal Plan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Meal Plans -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Existing Meal Plans ({{ meal_plans|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if meal_plans %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Calories</th>
+                                <th>Foods</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for plan in meal_plans %}
+                            <tr>
+                                <td><strong>{{ plan.name }}</strong><br>
+                                    <small class="text-muted">{{ plan.description[:50] }}{% if plan.description|length > 50 %}...{% endif %}</small>
+                                </td>
+                                <td><span class="badge bg-primary">{{ plan.category }}</span></td>
+                                <td>{{ plan.daily_calories }}</td>
+                                <td>{{ plan.foods|length }} items</td>
+                                <td>{{ plan.created_at[:10] }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('view_meal_plan', plan_id=plan.id) }}" 
+                                           class="btn btn-outline-info" target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-warning" 
+                                                onclick="editMealPlan('{{ plan.id }}', '{{ plan.name }}', '{{ plan.category }}', '{{ plan.daily_calories }}', '{{ plan.description }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <a href="{{ url_for('admin.delete_meal_plan', plan_id=plan.id) }}" 
+                                           class="btn btn-outline-danger"
+                                           onclick="return confirm('Are you sure you want to delete this meal plan?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-list-ul fa-3x text-muted mb-3"></i>
+                    <h5>No meal plans created yet</h5>
+                    <p class="text-muted">Create your first meal plan using the form above.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal (placeholder for edit functionality) -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Meal Plan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Edit functionality would be implemented here with a similar form structure.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateFoodName(selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const foodNameInput = selectElement.parentElement.querySelector('.food-name');
+    foodNameInput.value = selectedOption.dataset.name || '';
+}
+
+function addFoodItem() {
+    const foodItems = document.getElementById('foodItems');
+    const newItem = document.createElement('div');
+    newItem.className = 'row food-item mb-2';
+    newItem.innerHTML = `
+        <div class="col-md-4">
+            <select class="form-control food-select" name="food_ids" required onchange="updateFoodName(this)">
+                <option value="">Choose food...</option>
+                {% for food in foods %}
+                <option value="{{ food.id }}" data-name="{{ food.name }}">{{ food.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" class="food-name" name="food_names">
+        </div>
+        <div class="col-md-2">
+            <input type="number" class="form-control" name="quantities" placeholder="Quantity" step="0.1" min="0.1" required>
+        </div>
+        <div class="col-md-3">
+            <select class="form-control" name="meal_types" required>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Dinner">Dinner</option>
+                <option value="Snack">Snack</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-outline-danger" onclick="removeFoodItem(this)">
+                <i class="fas fa-trash"></i> Remove
+            </button>
+        </div>
+    `;
+    foodItems.appendChild(newItem);
+}
+
+function removeFoodItem(button) {
+    const foodItems = document.getElementById('foodItems');
+    if (foodItems.children.length > 1) {
+        button.closest('.food-item').remove();
+    } else {
+        alert('At least one food item is required.');
+    }
+}
+
+function editMealPlan(id, name, category, calories, description) {
+    // Show edit modal with populated data
+    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

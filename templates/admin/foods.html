@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Foods - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-apple-alt me-2"></i>Food Management
+        </h2>
+        <p class="text-muted">Add, edit, and manage the food database.</p>
+    </div>
+</div>
+
+<!-- Add Food Form -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-plus me-2"></i>Add New Food
+                </h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('admin.add_food') }}" method="POST" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="name" class="form-label">Food Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="calories" class="form-label">Calories</label>
+                        <input type="number" class="form-control" id="calories" name="calories" 
+                               min="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="protein" class="form-label">Protein (g)</label>
+                        <input type="number" class="form-control" id="protein" name="protein" 
+                               min="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="carbs" class="form-label">Carbs (g)</label>
+                        <input type="number" class="form-control" id="carbs" name="carbs" 
+                               min="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fat" class="form-label">Fat (g)</label>
+                        <input type="number" class="form-control" id="fat" name="fat" 
+                               min="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fiber" class="form-label">Fiber (g)</label>
+                        <input type="number" class="form-control" id="fiber" name="fiber" 
+                               min="0" step="0.1" required>
+                    </div>
+                    <div class="col-md-10">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Add Food
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Foods List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Food Database ({{ foods|length }} foods)
+                </h5>
+                <div class="search-box">
+                    <input type="text" class="form-control" id="foodSearch" 
+                           placeholder="Search foods..." onkeyup="filterFoods()">
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="foodsTable">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Calories</th>
+                                <th>Protein (g)</th>
+                                <th>Carbs (g)</th>
+                                <th>Fat (g)</th>
+                                <th>Fiber (g)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for food in foods %}
+                            <tr data-food-id="{{ food.id }}">
+                                <td class="food-name">{{ food.name }}</td>
+                                <td>{{ "%.1f"|format(food.calories) }}</td>
+                                <td>{{ "%.1f"|format(food.protein) }}</td>
+                                <td>{{ "%.1f"|format(food.carbs) }}</td>
+                                <td>{{ "%.1f"|format(food.fat) }}</td>
+                                <td>{{ "%.1f"|format(food.fiber) }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1" 
+                                            onclick="editFood('{{ food.id }}', '{{ food.name }}', {{ food.calories }}, {{ food.protein }}, {{ food.carbs }}, {{ food.fat }}, {{ food.fiber }})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <a href="{{ url_for('admin.delete_food', food_id=food.id) }}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete {{ food.name }}?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Food Modal -->
+<div class="modal fade" id="editFoodModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Edit Food
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editFoodForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editName" class="form-label">Food Name</label>
+                        <input type="text" class="form-control" id="editName" name="name" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editCalories" class="form-label">Calories</label>
+                            <input type="number" class="form-control" id="editCalories" name="calories" 
+                                   min="0" step="0.1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editProtein" class="form-label">Protein (g)</label>
+                            <input type="number" class="form-control" id="editProtein" name="protein" 
+                                   min="0" step="0.1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editCarbs" class="form-label">Carbs (g)</label>
+                            <input type="number" class="form-control" id="editCarbs" name="carbs" 
+                                   min="0" step="0.1" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editFat" class="form-label">Fat (g)</label>
+                            <input type="number" class="form-control" id="editFat" name="fat" 
+                                   min="0" step="0.1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editFiber" class="form-label">Fiber (g)</label>
+                        <input type="number" class="form-control" id="editFiber" name="fiber" 
+                               min="0" step="0.1" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editFood(id, name, calories, protein, carbs, fat, fiber) {
+    document.getElementById('editName').value = name;
+    document.getElementById('editCalories').value = calories;
+    document.getElementById('editProtein').value = protein;
+    document.getElementById('editCarbs').value = carbs;
+    document.getElementById('editFat').value = fat;
+    document.getElementById('editFiber').value = fiber;
+    
+    document.getElementById('editFoodForm').action = '{{ url_for("admin.edit_food", food_id="") }}' + id;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editFoodModal'));
+    modal.show();
+}
+
+function filterFoods() {
+    const input = document.getElementById('foodSearch');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('foodsTable');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 1; i < rows.length; i++) {
+        const nameCell = rows[i].getElementsByClassName('food-name')[0];
+        if (nameCell) {
+            const textValue = nameCell.textContent || nameCell.innerText;
+            if (textValue.toLowerCase().indexOf(filter) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+}
+</script>
+{% endblock %}

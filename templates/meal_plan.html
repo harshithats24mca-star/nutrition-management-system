@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Meal Plan - NutriTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Date Selection -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>Meal Plan
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="date" class="form-label">Select Date</label>
+                        <input type="date" class="form-control" id="date" name="date" 
+                               value="{{ selected_date }}" onchange="this.form.submit()">
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Meals for Selected Date -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-utensils me-2"></i>Meals for {{ selected_date }}
+                </h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMealModal">
+                    <i class="fas fa-plus me-1"></i>Add Meal
+                </button>
+            </div>
+            <div class="card-body">
+                {% if meals %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Food</th>
+                                <th>Quantity</th>
+                                <th>Calories</th>
+                                <th>Protein</th>
+                                <th>Carbs</th>
+                                <th>Fat</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for meal in meals %}
+                            <tr>
+                                <td>{{ meal.food_name }}</td>
+                                <td>{{ "%.1f"|format(meal.quantity) }}</td>
+                                <td>{{ "%.0f"|format(meal.calories) }}</td>
+                                <td>{{ "%.1f"|format(meal.protein) }}g</td>
+                                <td>{{ "%.1f"|format(meal.carbs) }}g</td>
+                                <td>{{ "%.1f"|format(meal.fat) }}g</td>
+                                <td>
+                                    <a href="{{ url_for('delete_meal', meal_id=meal.id) }}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Are you sure you want to delete this meal?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th>Total</th>
+                                <th>-</th>
+                                <th>{{ "%.0f"|format(meals|sum(attribute='calories')) }}</th>
+                                <th>{{ "%.1f"|format(meals|sum(attribute='protein')) }}g</th>
+                                <th>{{ "%.1f"|format(meals|sum(attribute='carbs')) }}g</th>
+                                <th>{{ "%.1f"|format(meals|sum(attribute='fat')) }}g</th>
+                                <th>-</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No meals planned for {{ selected_date }}</h6>
+                    <p class="text-muted">Click "Add Meal" to start planning your nutrition for this day.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Daily Summary -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Daily Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if meals %}
+                {% set total_calories = meals|sum(attribute='calories') %}
+                {% set total_protein = meals|sum(attribute='protein') %}
+                {% set total_carbs = meals|sum(attribute='carbs') %}
+                {% set total_fat = meals|sum(attribute='fat') %}
+                {% set total_fiber = meals|sum(attribute='fiber') %}
+                
+                <div class="nutrition-summary">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-fire text-danger me-1"></i>Calories</span>
+                            <strong>{{ "%.0f"|format(total_calories) }}</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" style="width: {{ (total_calories / 2000 * 100) | round }}%"></div>
+                        </div>
+                        <small class="text-muted">Goal: 2000</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-drumstick-bite text-primary me-1"></i>Protein</span>
+                            <strong>{{ "%.1f"|format(total_protein) }}g</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-primary" style="width: {{ (total_protein / 150 * 100) | round }}%"></div>
+                        </div>
+                        <small class="text-muted">Goal: 150g</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-bread-slice text-warning me-1"></i>Carbs</span>
+                            <strong>{{ "%.1f"|format(total_carbs) }}g</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" style="width: {{ (total_carbs / 300 * 100) | round }}%"></div>
+                        </div>
+                        <small class="text-muted">Goal: 300g</small>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between">
+                            <span><i class="fas fa-tint text-info me-1"></i>Fat</span>
+                            <strong>{{ "%.1f"|format(total_fat) }}g</strong>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-info" style="width: {{ (total_fat / 67 * 100) | round }}%"></div>
+                        </div>
+                        <small class="text-muted">Goal: 67g</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center">
+                    <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Add meals to see your daily nutrition summary.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Meal Modal -->
+<div class="modal fade" id="addMealModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Add Meal
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Search Foods</h6>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="foodSearch" placeholder="Search for foods...">
+                            <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <div id="searchResults" class="food-results"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Add to Meal Plan</h6>
+                        <form action="{{ url_for('add_meal') }}" method="POST" id="addMealForm">
+                            <input type="hidden" name="food_id" id="selectedFoodId">
+                            <input type="hidden" name="date" value="{{ selected_date }}">
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Selected Food</label>
+                                <input type="text" class="form-control" id="selectedFoodName" readonly>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity (servings)</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" 
+                                       value="1" min="0.1" step="0.1" required>
+                            </div>
+                            
+                            <div id="nutritionPreview" class="mb-3" style="display: none;">
+                                <h6>Nutrition Preview</h6>
+                                <div class="nutrition-info">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Calories:</small><br>
+                                            <span id="previewCalories">0</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Protein:</small><br>
+                                            <span id="previewProtein">0</span>g
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Carbs:</small><br>
+                                            <span id="previewCarbs">0</span>g
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Fat:</small><br>
+                                            <span id="previewFat">0</span>g
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100" disabled id="addMealBtn">
+                                <i class="fas fa-plus me-2"></i>Add to Meal Plan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/nutrition.js') }}"></script>
+{% endblock %}

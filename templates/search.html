@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Meal Plans - NutriTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="fas fa-th-large me-2"></i>Browse Meal Plans
+        </h2>
+        <p class="text-muted">Discover expert-designed meal plans tailored to your health goals.</p>
+    </div>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Find Your Perfect Meal Plan
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" name="q" 
+                    placeholder="Search meal plans (e.g., weight loss, muscle building)..."
+                    value="{{ query }}" autofocus>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-control" name="category">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                {% if query or category %}
+                    Search Results
+                    <span class="badge bg-secondary ms-2">{{ meal_plans|length }} plans found</span>
+                {% else %}
+                    All Meal Plans
+                    <span class="badge bg-primary ms-2">{{ meal_plans|length }} available</span>
+                {% endif %}
+            </h4>
+        </div>
+    </div>
+</div>
+
+<!-- Meal Plans Grid -->
+{% if meal_plans %}
+<div class="row">
+    {% for plan in meal_plans %}
+    <div class="col-lg-4 col-md-6 mb-4">
+        <div class="card h-100 meal-plan-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="card-title mb-1">{{ plan.name }}</h5>
+                        <span class="badge bg-primary">{{ plan.category }}</span>
+                    </div>
+                    <div class="text-end">
+                        <div class="h5 mb-0 text-success">
+                            <i class="fas fa-fire me-1"></i>{{ plan.daily_calories }}
+                        </div>
+                        <small class="text-muted">calories/day</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ plan.description }}</p>
+                
+                <!-- Plan Stats -->
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="stat-item">
+                            <i class="fas fa-utensils text-primary"></i>
+                            <div class="value">{{ plan.foods|length }}</div>
+                            <div class="label">meals included</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-item">
+                            {% set breakfast_count = plan.foods | selectattr('meal_type', 'equalto', 'Breakfast') | list | length %}
+                            {% set lunch_count = plan.foods | selectattr('meal_type', 'equalto', 'Lunch') | list | length %}
+                            {% set dinner_count = plan.foods | selectattr('meal_type', 'equalto', 'Dinner') | list | length %}
+                            {% set snack_count = plan.foods | selectattr('meal_type', 'equalto', 'Snack') | list | length %}
+                            <i class="fas fa-clock text-info"></i>
+                            <div class="value">{{ [breakfast_count, lunch_count, dinner_count, snack_count] | select('greaterthan', 0) | list | length }}</div>
+                            <div class="label">meal times</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Meal Types Preview -->
+                <div class="meal-types mb-3">
+                    <small class="text-muted d-block mb-1">Includes:</small>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% if breakfast_count > 0 %}
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-sun me-1"></i>Breakfast ({{ breakfast_count }})
+                            </span>
+                        {% endif %}
+                        {% if lunch_count > 0 %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-cloud-sun me-1"></i>Lunch ({{ lunch_count }})
+                            </span>
+                        {% endif %}
+                        {% if dinner_count > 0 %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-moon me-1"></i>Dinner ({{ dinner_count }})
+                            </span>
+                        {% endif %}
+                        {% if snack_count > 0 %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-cookie-bite me-1"></i>Snacks ({{ snack_count }})
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('view_meal_plan', plan_id=plan.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-info-circle me-2"></i>View Details & Nutrition
+                    </a>
+                    {% if session.user_id %}
+                    <form method="POST" action="{{ url_for('assign_meal_plan') }}">
+                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                        <input type="hidden" name="date" value="{{ today }}">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-play me-2"></i>Start This Plan Today
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-success w-100">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login to Start Plan
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination or Load More could go here -->
+<div class="text-center mt-4">
+    {% if session.user_id %}
+    <a href="{{ url_for('nutrition_management') }}" class="btn btn-primary btn-lg">
+        <i class="fas fa-calendar-alt me-2"></i>Go to Nutrition Manager
+    </a>
+    {% endif %}
+</div>
+
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                {% if query or category %}
+                    <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No meal plans found</h4>
+                    <p class="text-muted mb-4">
+                        No meal plans match your search criteria. Try adjusting your filters or search terms.
+                    </p>
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">
+                        <i class="fas fa-th-large me-2"></i>View All Meal Plans
+                    </a>
+                {% else %}
+                    <i class="fas fa-utensils fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No meal plans available</h4>
+                    <p class="text-muted mb-4">
+                        Our nutritionists are working hard to create amazing meal plans for you. Check back soon!
+                    </p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Return to Home
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.meal-plan-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.meal-plan-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item i {
+    font-size: 1.2em;
+    margin-bottom: 0.3rem;
+}
+
+.stat-item .value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #fff;
+}
+
+.stat-item .label {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.meal-types .badge {
+    font-size: 0.7em;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-submit form when category changes
+document.querySelector('select[name="category"]').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Add confirmation for plan selection
+document.querySelectorAll('form[action*="assign_meal_plan"] button').forEach(button => {
+    button.addEventListener('click', function(e) {
+        const planName = this.closest('.card').querySelector('.card-title').textContent.trim();
+        if (!confirm(`Are you sure you want to start the "${planName}" meal plan today?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
